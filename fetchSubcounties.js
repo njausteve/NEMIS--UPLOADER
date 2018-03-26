@@ -48,13 +48,6 @@ csv
 
       }, errHandler);
 
-
-
-
-
-
-
-
   })
 
   .on("end", function() {

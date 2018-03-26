@@ -26,13 +26,13 @@ exports.generateUpi = function(reqCookie) {
 
       //console.log(body);
 
-      var $ = cheerio.load(body);
-
       if (error) {
 
         reject(error);
 
       } else {
+
+        var $ = cheerio.load(body);
 
         if ($('h2 > a').attr('href') === "/Login.aspx" || $('#form1').attr('action') === "./Login.aspx") {
 
@@ -41,7 +41,12 @@ exports.generateUpi = function(reqCookie) {
 
           reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
 
-        } else {
+        } else if(body == "The service is unavailable"){
+
+
+          reject({error: "findUPI -----> The service is unavailable "});  
+
+        }else {
 
           //getTempUPI + __EVENTVALIDATION +
 
@@ -57,7 +62,7 @@ exports.generateUpi = function(reqCookie) {
 
           resolve(generatedUPIdata);
 
-          console.log('generatedUPIdata========>', generatedUPIdata);
+         // console.log('generatedUPIdata========>', generatedUPIdata);
         }
 
       }
@@ -68,80 +73,80 @@ exports.generateUpi = function(reqCookie) {
 }
 
 
-exports.generateUPIcallback = function(result, data, reqCookie) {
+// exports.generateUPIcallback = function(result, data, reqCookie) {
 
-  // console.log('data inside callback : ', result);
+//   // console.log('data inside callback : ', result);
 
-  if (result.UPI !== '') {
+//   if (result.UPI !== '') {
 
-    data.upigeneratestatus = "success";
+//     data.upigeneratestatus = "success";
 
-    console.log('UPI generation for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' success -------> UPI: ');
-
-
-    if (data.firstname == '' || data.othername == '' || data.surname == '' || data.dob == '' || data.gender == '') {
-
-      console.log('Wrong or missing firstname, othername, surname, dob or gender fields for : ' + data.firstname + ' ' + data.surname + " birthcert no -------> " + data.birthNo);
-
-      data.generatedupisave = 'failed: wrong/missing paramters';
-
-      csvStream.write(data);
-
-    } else {
+//     console.log('UPI generation for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' success -------> UPI: ');
 
 
+//     if (data.firstname == '' || data.othername == '' || data.surname == '' || data.dob == '' || data.gender == '') {
 
-      var saveGeneratedUpiPromise = new save.saveGeneratedUpi(result, data, reqCookie)
+//       console.log('Wrong or missing firstname, othername, surname, dob or gender fields for : ' + data.firstname + ' ' + data.surname + " birthcert no -------> " + data.birthNo);
 
-        .then(function(saveGeneratedUpiresult) {
+//       data.generatedupisave = 'failed: wrong/missing paramters';
 
-          console.log('saveGeneratedUpiPromise resolved : ', saveGeneratedUpiresult);
+//       csvStream.write(data);
 
-          //if generatedUpi not saved
-
-          if (!saveGeneratedUpiresult.saved) {
-
-            data.generatedupisave = "failed";
-
-            console.log('initiating UPI generation / save  for ' + data.firstname + data.surname + " birth cert No ----> " + data.birthNo);
-
-          } else {
-
-            //generated UPI saved
-
-
-            data.generatedupisave = "success";
-
-            data.UPI = saveGeneratedUpiresult.UPI;
-
-            console.log('UPI assignment/save for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' success -------> UPI: ' + saveGeneratedUpiresult.UPI);
-
-            csvStream.write(data);
-
-          }
-
-
-        }, errHandler);
-
-
-    }
-
-  } else {
-
-    //upi generation fail
-
-    data.upigeneratestatus = "failed";
-    console.log('UPI generation for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' failed');
-
-  }
+//     } else {
 
 
 
-  return result;
+//       var saveGeneratedUpiPromise = new save.saveGeneratedUpi(result, data, reqCookie)
 
-}
+//         .then(function(saveGeneratedUpiresult) {
+
+//           console.log('saveGeneratedUpiPromise resolved : ', saveGeneratedUpiresult);
+
+//           //if generatedUpi not saved
+
+//           if (!saveGeneratedUpiresult.saved) {
+
+//             data.generatedupisave = "failed";
+
+//             console.log('initiating UPI generation / save  for ' + data.firstname + data.surname + " birth cert No ----> " + data.birthNo);
+
+//           } else {
+
+//             //generated UPI saved
 
 
-var errHandler = function(err) {
-  console.log(err);
-};
+//             data.generatedupisave = "success";
+
+//             data.UPI = saveGeneratedUpiresult.UPI;
+
+//             console.log('UPI assignment/save for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' success -------> UPI: ' + saveGeneratedUpiresult.UPI);
+
+//             csvStream.write(data);
+
+//           }
+
+
+//         }, errHandler);
+
+
+//     }
+
+//   } else {
+
+//     //upi generation fail
+
+//     data.upigeneratestatus = "failed";
+//     console.log('UPI generation for ' + data.firstname + ' ' + data.surname + " birth cert number " + data.birthNo + ' failed');
+
+//   }
+
+
+
+//   return result;
+
+// }
+
+
+// var errHandler = function(err) {
+//   console.log(err);
+// };

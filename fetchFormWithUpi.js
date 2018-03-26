@@ -29,10 +29,8 @@ exports.fetchLearnerForm = function (fetchformData, data, reqCookie) {
 
     request(options, function (error, response, body) {
 
-      var $ = cheerio.load(body);
-
-
-       console.log("body for form fetch for " + data.firstname + " " + data.surname + body);
+    
+      // console.log("body for form fetch for " + data.firstname + " " + data.surname + body);
 
       if (error) {
 
@@ -41,30 +39,53 @@ exports.fetchLearnerForm = function (fetchformData, data, reqCookie) {
 
       } else {
 
+        var $ = cheerio.load(body);
+
         if ($('h2 > a').attr('href') === "/Login.aspx" || $('#form1').attr('action') === "./Login.aspx") {
 
-
-          reject("savegeneratedUPI ----> cookie expired or incorrect");
-
+          reject({error: "findUPI -----> cookie expired or incorrect"});
 
         } else if ($('h1').html() == 'Object Moved') {
 
-          reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
+          reject({error: "Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter"});
 
+
+        }else if(body == "The service is unavailable."){
+
+
+          reject({error: "FetchFormwithUPI -----> The service is unavailable "});  
 
         } else {
 
 
           var fullname = data.surname + "," + data.firstname + " " + data.othername,
-            learnerFormDataresult = {};
-          learnerFormDataresult.viewstate = $('#__VIEWSTATE').val();
-          learnerFormDataresult.eventValidation = $('#__EVENTVALIDATION').val();
+              learnerFormDataresult = {};
+               learnerFormDataresult.viewstate = $('#__VIEWSTATE').val();
+               learnerFormDataresult.eventValidation = $('#__EVENTVALIDATION').val();
          // learnerFormDataresult.UPI = $('#ContentPlaceHolder1_txtUPI').val();
 
+        learnerFormDataresult.UPI =  $("#ContentPlaceHolder1_txtUPI").val();
+        learnerFormDataresult.county =  $("#ContentPlaceHolder1_ddlcounty option:selected").val();
+        learnerFormDataresult.subcounty = $("#ContentPlaceHolder1_lblsubcounty").val();   
+        learnerFormDataresult.MotherIDNo = $("#ContentPlaceHolder1_txtMotherIDNo").val();
+        learnerFormDataresult.MotherName = $("#ContentPlaceHolder1_txtMotherName").val();
+        learnerFormDataresult.MotherUPI = $("#ContentPlaceHolder1_txtMotherUPI").val();
+        learnerFormDataresult.MothersContacts = $("#ContentPlaceHolder1_txtMothersContacts").val();
+        learnerFormDataresult.FatherIDNO = $("#ContentPlaceHolder1_txtFatherIDNO").val();
+        learnerFormDataresult.FatherName = $("#ContentPlaceHolder1_txtFatherName").val();
+        learnerFormDataresult.FatherUPI= $("#ContentPlaceHolder1_txtFatherUPI").val();
+        learnerFormDataresult.FatherContacts =$("#ContentPlaceHolder1_txtFatherContacts").val();
+        learnerFormDataresult.GuardianIDNO= $("#ContentPlaceHolder1_txtGuardianIDNO").val();
+        learnerFormDataresult.Guardianname=$("#ContentPlaceHolder1_txtGuardianname").val();
+        learnerFormDataresult.GuardianUPI=$("#ContentPlaceHolder1_txtGuardianUPI").val();
+        learnerFormDataresult.Guardiancontacts=$("#ContentPlaceHolder1_txtGuardiancontacts").val();
+        learnerFormDataresult.class =  $("#ContentPlaceHolder1_ddlClass option:selected").val();
+        
 
+                                  
           console.log($('#ContentPlaceHolder1_txtNames').val().toUpperCase().trim().replace(/\s/g, '') + " ======= NAMES =========== " + fullname.toUpperCase().trim().replace(/\s/g, ''));
 
-
+       console.log(data.UPI + ' -------> ' + $("#ContentPlaceHolder1_lblsubcounty").val());
      
           //check if names are coreect
 
@@ -110,3 +131,4 @@ exports.fetchLearnerForm = function (fetchformData, data, reqCookie) {
   })
 
 }
+

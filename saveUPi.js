@@ -42,13 +42,13 @@ exports.saveGeneratedUpi = function (result, data, reqCookie) {
 
         request(options, function (error, response, body) {
 
-            var $ = cheerio.load(body);
-
             if (error) {
 
                 reject(error);
 
             } else {
+
+                var $ = cheerio.load(body);
 
                 if ($('h2 > a').attr('href') === "/Login.aspx" || $('#form1').attr('action') === "./Login.aspx") {
 
@@ -59,7 +59,12 @@ exports.saveGeneratedUpi = function (result, data, reqCookie) {
 
                     reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
 
-                } else {
+                } else if(body == "The service is unavailable."){
+
+
+                    reject({error: "SaveUPI -----> The service is unavailable "});  
+          
+                }else {
 
                     var saveGeneratedUpiresult = {};
                       var  succesSavedUpiPatt = /has been a signed to/,

@@ -29,12 +29,11 @@ exports.validateCountyName = function(result, data, reqCookie) {
 
     request(options, function(error, response, body) {
     
-       console.log('reg for  county'+ data.firstname + " " +data.surname );
-       console.log(options);
+      //  console.log('reg for  county'+ data.firstname + " " +data.surname );
+      //  console.log(options);
 
-      console.log("request for county "+ data.firstname + " " +data.surname + body);
+      // console.log("request for county "+ data.firstname + " " +data.surname + body);
 
-      var $ = cheerio.load(body);
 
       if (error) {
 
@@ -42,16 +41,26 @@ exports.validateCountyName = function(result, data, reqCookie) {
 
       } else {
 
+        var $ = cheerio.load(body);
+
         if ($('h2 > a').attr('href') === "/Login.aspx" || $('#form1').attr('action') === "./Login.aspx") {
           reject("generateUPI -----> cookie expired or incorrect");
         } else if ($('h1').html() == 'Object Moved') {
 
           reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
 
-        } else {
+        } else if(body == "The service is unavailable."){
+
+
+          reject({error: "validateCountyName -----> The service is unavailable "});  
+
+        }else {
 
 
           var countyValidateresult = {};
+
+
+          console.log( 'county name for ' + data.UPI + ' ----------> :' + $("#ContentPlaceHolder1_ddlcounty option:selected").val() );
 
 
           //    console.log("-------------------------" + $("#ContentPlaceHolder1_ddlcounty option:selected").val() + "\n" + "-------------------------" + data.county + " for ---> " + data.firstname);
@@ -125,6 +134,11 @@ exports.validateSubCountyName = function(result, data, reqCookie) {
         } else if ($('h1').html() == 'Object Moved') {
 
           reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
+
+        }else if(body == "The service is unavailable."){
+
+
+          reject({error: "validateSubCountyName -----> The service is unavailable "});  
 
         } else {
 
@@ -204,7 +218,12 @@ exports.validateMothersIdData = function(result, data, reqCookie) {
 
           reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
 
-        } else {
+        } else if(body == "The service is unavailable."){
+
+
+          reject({error: "validateMothersIdData -----> The service is unavailable "});  
+
+        }else {
 
 
           var motherIdValidateresult = {};

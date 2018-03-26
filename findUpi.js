@@ -32,29 +32,30 @@ exports.findUpi = function(upiCheckData, data, reqCookie) {
 
     request(options, function(error, response, body) {
 
-      var $ = cheerio.load(body);
-
       if (error) {
 
         reject(error);
 
       } else {
 
+        var $ = cheerio.load(body);
+
         if ($('h2 > a').attr('href') === "/Login.aspx" || $('#form1').attr('action') === "./Login.aspx") {
 
-          reject("findUPI -----> cookie expired or incorrect");
+          reject({error: "findUPI -----> cookie expired or incorrect"});
 
         } else if ($('h1').html() == 'Object Moved') {
 
-          reject("Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter");
+          reject({error: "Problem with request URL, __VIEWSTATE, __EVENTVALIDATION or Missing paramenter"});
+        
+        }else if( body == "The service is unavailable."){
 
-        } else {
 
-          if (upiCheckData.UPIsearchParamText == 0661206751) {
+          reject({error: "findUPI -----> The service is unavailable "});  
 
-            console.log(body);
-          }
+        }else {
 
+        
 
           var upiDetails = {},
             noUPIpatt = /has not been validated successfully/,

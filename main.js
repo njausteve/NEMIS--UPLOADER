@@ -10,12 +10,12 @@ var request = require("request"),
   validate = require('./validate.js');
 
 
-var reqCookie = 'ASP.NET_SessionId=5v10cmi5yhxbcy1pl4swj0hs';
+var reqCookie = 'ASP.NET_SessionId=4wc0c11atrernaxltvkdsejl';
 
 
 var resViewStatefindUPI, resEventValidationFindUPI;
-var sourceDataPath = './documents/2E/class 2E.csv';
-var destDataPath = './documents/2E/class 2E UPI.csv';
+var sourceDataPath = './documents/1 w/class  1w copy.csv';
+var destDataPath = './documents/1 w/class 1w UPI.csv';
 var rs = fs.createReadStream(sourceDataPath);
 var ws = fs.createWriteStream(destDataPath);
 var csvStream = csv.createWriteStream({
@@ -49,13 +49,13 @@ csv
 
       upiCheckData.UPIsearchParamText = data.birthNo;
 
-      findUpiPromise = new find.findUpi(upiCheckData, data, reqCookie)
+      find.findUpi(upiCheckData, data, reqCookie)
 
         .then(function(result) {
 
 
           // console.log("findUpiPromise for " + data.firstname + data.surname + " resolved : ");
-          //  console.log("findUPI: ", result);
+          //  console.log(result);
 
 
           if (result.exist) {
@@ -70,8 +70,10 @@ csv
 
             //function invoke form data verifivation
             initiateFormFilling(result, data);
-      //csvStream.write(data);
-            
+
+
+            //csvStream.write(data);
+
 
 
           } else {
@@ -83,15 +85,18 @@ csv
 
             //loop through Generate & save promises.
 
-            //    while( data.generatedupisave !== "success"){
 
             generateSave(data);
+            // csvStream.write(data);
 
 
           }
 
 
-        }, errHandler);
+        })
+
+        .catch(errHandler);
+
 
 
     }
@@ -108,11 +113,12 @@ csv
 
 var errHandler = function(err) {
   console.log(err);
+  console.log('catch it');
 };
 
 function generateSave(data) {
 
-  return new generate.generateUpi(reqCookie)
+  return generate.generateUpi(reqCookie)
     .then(function(result) {
 
       // console.log('data inside callback : ', result);
@@ -137,7 +143,7 @@ function generateSave(data) {
 
           ///HEADED TO SAVE
 
-          saveGeneratedUpiPromise = new save.saveGeneratedUpi(result, data, reqCookie)
+          save.saveGeneratedUpi(result, data, reqCookie)
 
 
             .then(function(saveGeneratedUpiresult) {
@@ -169,11 +175,13 @@ function generateSave(data) {
 
                 initiateFormFilling(result, data);
 
-
+                //csvStream.write(data);
               }
 
 
-            }, errHandler);
+            })
+
+            .catch(errHandler);
 
         }
 
@@ -189,7 +197,9 @@ function generateSave(data) {
       }
 
 
-    }, errHandler);
+    })
+
+    .catch(errHandler);
 
 }
 
@@ -199,31 +209,37 @@ function generateSave(data) {
 
 function initiateFormFilling(result, data) {
 
-  return new getForm.fetchLearnerForm(result, data, reqCookie)
+  return getForm.fetchLearnerForm(result, data, reqCookie)
 
     .then(function(result) {
 
       data.fetchLearnerForm = "success";
 
+
+      console.log('form fetched');
+
+
+
       //if form not filled
       if (!result.isformFilled) {
 
-
-
         if (result.correctData) {
 
-          console.log('Form is not filled --- form filling INTITIATED for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + result.UPI);
+          console.log('Form is not filled --- form filling INTITIATED for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + data.UPI);
           data.isformfilled = "no";
-
-         
 
           validateCounty(result, data, reqCookie);
 
+
+
+          // csvStream.write(data);
+
+
         } else {
 
-          console.log('Form is not filled (WRONG NAME) --- form not INTITIATED for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + result.UPI);
+          console.log('Form is not filled (WRONG NAME) --- form not INTITIATED for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + data.UPI);
           data.isformfilled = "no : check names ";
-          
+
           csvStream.write(data);
 
         }
@@ -233,7 +249,7 @@ function initiateFormFilling(result, data) {
         if (!result.correctData) {
 
           //form already filled : wrong name
-          console.log('Form is filled with WRONG NAMES --- form not initiated for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + result.UPI);
+          console.log('Form is filled with WRONG NAMES --- form not initiated for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + data.UPI);
           data.isformfilled = "yes : incorect names values";
 
           csvStream.write(data);
@@ -241,23 +257,43 @@ function initiateFormFilling(result, data) {
         } else {
 
           //form already filled : proper name
-          console.log('Form is already filled for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + result.UPI);
+          console.log('Form is already filled for : ' + data.firstname + ' ' + data.surname + ' UPI -----> ' + data.UPI);
+
           data.isformfilled = "yes ";
 
-          csvStream.write(data);
+          //  all emails update + postal Address...
+
+          if (data.fatheremail !== '' || data.motheremail !== '') {
+
+
+            fillAndUpdate(result, data, reqCookie);
+
+            //console.log('fetched data ----> ', result);
+
+
+          } else {
+
+
+            csvStream.write(data);
+
+          }
+
+          //csvStream.write(data);
 
         }
 
+
       }
 
-    }, errHandler);
+    })
+    .catch(errHandler);
 
 }
 
 
 function validateCounty(result, data, reqCookie) {
 
-  return new validate.validateCountyName(result, data, reqCookie)
+  return validate.validateCountyName(result, data, reqCookie)
 
     .then(function(result) {
 
@@ -269,6 +305,8 @@ function validateCounty(result, data, reqCookie) {
 
         validateSubcounty(result, data, reqCookie);
 
+        //  csvStream.write(data);
+
       } else {
 
         data.countyValidationstatus = 'failed';
@@ -279,7 +317,9 @@ function validateCounty(result, data, reqCookie) {
 
       }
 
-    }, errHandler);
+    })
+
+    .catch(errHandler);
 
 }
 
@@ -287,7 +327,7 @@ function validateCounty(result, data, reqCookie) {
 
 function validateSubcounty(result, data, reqCookie) {
 
-  return new validate.validateSubCountyName(result, data, reqCookie)
+  return validate.validateSubCountyName(result, data, reqCookie)
 
     .then(function(result) {
 
@@ -310,12 +350,13 @@ function validateSubcounty(result, data, reqCookie) {
 
       }
 
-    }, errHandler);
+    })
+    .catch(errHandler);
 }
 
 function validateMothersId(result, data, reqCookie) {
 
-  return new validate.validateMothersIdData(result, data, reqCookie)
+  return validate.validateMothersIdData(result, data, reqCookie)
 
     .then(
 
@@ -327,7 +368,7 @@ function validateMothersId(result, data, reqCookie) {
 
           console.log('mothers Validation for : ' + data.firstname + ' ' + data.surname + " UPI " + data.UPI + " SUCCESS");
 
-          data.motherIDvalidationstatus= "validated";
+          data.motherIDvalidationstatus = "validated";
 
           fillAndSubmit(result, data, reqCookie);
 
@@ -341,18 +382,24 @@ function validateMothersId(result, data, reqCookie) {
 
         }
 
-      }, errHandler);
+      })
+    .catch(errHandler);
 }
 
 
 
 function fillAndSubmit(result, data, reqCookie) {
 
+
+  console.log('filling --------> ', data);
+
   return fill.fillAndSubmitData(result, data, reqCookie)
 
     .then(
 
+
       function(result) {
+
         if (result.submitted) {
 
           data.formSubmitStatus = "success";
@@ -365,15 +412,60 @@ function fillAndSubmit(result, data, reqCookie) {
 
           csvStream.write(data);
 
+
+
         } else {
 
           data.formSubmitStatus = "failed";
+
+          console.log('failed ');
 
           csvStream.write(data);
 
         }
 
-      }, errHandler);
+      })
+    .catch(errHandler);
+
+
+}
+
+
+
+function fillAndUpdate(result, data, reqCookie) {
+
+  return fill.fillAndUpdateData(result, data, reqCookie)
+
+    .then(
+
+
+      function(result) {
+
+        if (result.submitted) {
+
+
+          console.log("\n ========================== SUCCESFULLY UPDATE FORM ============================= \n");
+          console.log('                   Name:' + data.firstname + " " + data.othername + " " + data.surname);
+          console.log('                   UPI :' + data.UPI);
+          console.log('          Birth Cert no:' + data.birthNo + "\n");
+          console.log("========================== SUCCESFULLY UPDATED FORM ============================= \n ");
+
+
+          csvStream.write(data);
+
+
+
+        } else {
+
+
+          csvStream.write(data);
+
+          console.log('Update failed ');
+
+        }
+
+      })
+    .catch(errHandler);
 
 
 }
